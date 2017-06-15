@@ -19,8 +19,10 @@ function importCSV {
 function checkVersion {
     # establish ssh connection to each host
     ForEach ($heading in $devices) {
-        New-SSHSession -ComputerName $heading.IP -Credential (Get-Credential admin)
+        New-SSHSession -ComputerName $heading.IP -Credential (Get-Credential crestron)
+        Invoke-SSHCommand -Index 0 -Command "version" # need to figure out how to iterate through indices of all connected ssh sessions to run this command
     }
+
 }
 
 function uploadFirmware {
