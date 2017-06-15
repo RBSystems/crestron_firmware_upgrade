@@ -21,9 +21,12 @@ function checkVersion {
     # establish ssh connection to each host
     ForEach ($heading in $devices) {
         New-SSHSession -ComputerName $heading.IP -Credential $credential
-        Invoke-SSHCommand -Index 0 -Command "version" # need to figure out how to iterate through indices of all connected ssh sessions to run this command
     }
-
+    # get firmware version
+    ForEach ($heading in $SshSessions) {
+        Invoke-SSHCommand -Index $heading.SessionId -Command "version"
+    }
+    # Add code to disconnect ssh session from each device
 }
 
 function uploadFirmware {
