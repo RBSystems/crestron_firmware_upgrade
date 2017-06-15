@@ -9,6 +9,7 @@
 Clear-Host
 $devices = @() # instantiate an empty array
 importCSV
+$credential = Get-Credential -Message "Enter the username and password to use for SSH to Crestron devices."
 checkVersion
 
 function importCSV {
@@ -19,7 +20,7 @@ function importCSV {
 function checkVersion {
     # establish ssh connection to each host
     ForEach ($heading in $devices) {
-        New-SSHSession -ComputerName $heading.IP -Credential (Get-Credential crestron)
+        New-SSHSession -ComputerName $heading.IP -Credential $credential
         Invoke-SSHCommand -Index 0 -Command "version" # need to figure out how to iterate through indices of all connected ssh sessions to run this command
     }
 
