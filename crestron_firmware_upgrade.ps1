@@ -6,12 +6,6 @@
 # available firmware upgrades, and logs the new firmware version verifying that the upgrade was completed
 # successfully.
 
-Clear-Host
-$devices = @() # instantiate an empty array
-importCSV
-$credential = Get-Credential -Message "Enter the username and password to use for SSH to Crestron devices."
-checkVersion
-
 function importCSV {
     $filepath = "$PSScriptRoot\ip-addresses-template.csv"
     $global:devices = Import-Csv $filepath # assign imported CSV data to global $devices array
@@ -26,7 +20,14 @@ function checkVersion {
     ForEach ($heading in $SshSessions) {
         Invoke-SSHCommand -Index $heading.SessionId -Command "version"
     }
-    # Add code to disconnect ssh session from each device
+    # Add code to disconnect ssh session from each host
+    $sessionIndices = @()
+    ForEach ($heading in $SshSessions) {
+        $sessionIndices += $heading.SessionId
+    }
+    ForEach ($index in $sessionIndices) {
+        Remove-SSHSession -Index $index
+    }
 }
 
 function uploadFirmware {
@@ -36,3 +37,9 @@ function uploadFirmware {
 function applyFirmware {
 # connect to each device and apply current firmware upgrade
 }
+
+Clear-Host
+$devices = @() # instantiate an empty array
+importCSV
+$credential = Get-Credential -Message "Enter the username and password to use for SSH to Crestron devices."
+checkVersion
