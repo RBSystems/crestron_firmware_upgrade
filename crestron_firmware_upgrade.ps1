@@ -6,18 +6,21 @@
 # available firmware upgrades, and logs the new firmware version verifying that the upgrade was completed
 # successfully.
 
+Clear-Host
+$devices = @() # instantiate an empty array
 importCSV
+checkVersion
 
 function importCSV {
     $filepath = "$PSScriptRoot\ip-addresses-template.csv"
-    $devices = Import-Csv $filepath
-    ForEach ($heading in $devices) {
-        Write-Host $ip = $heading.IP `n
-    }
+    $global:devices = Import-Csv $filepath # assign imported CSV data to global $devices array
 }
 
 function checkVersion {
-#	connect to each device and check current firmware version
+    # establish ssh connection to each host
+    ForEach ($heading in $devices) {
+        New-SSHSession -ComputerName $heading.IP -Credential (Get-Credential admin)
+    }
 }
 
 function uploadFirmware {
