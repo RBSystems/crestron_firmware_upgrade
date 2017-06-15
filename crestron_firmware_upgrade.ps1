@@ -6,8 +6,14 @@
 # available firmware upgrades, and logs the new firmware version verifying that the upgrade was completed
 # successfully.
 
+importCSV
+
 function importCSV {
-#	import device information from CSV file into array
+    $filepath = "$PSScriptRoot\ip-addresses-template.csv"
+    $devices = Import-Csv $filepath
+    ForEach ($heading in $devices) {
+        Write-Host $ip = $heading.IP `n
+    }
 }
 
 function checkVersion {
