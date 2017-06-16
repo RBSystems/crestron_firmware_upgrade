@@ -8,19 +8,25 @@
 
 function importCSV {
     $filepath = "$PSScriptRoot\ip-addresses-template.csv"
-    $global:devices = Import-Csv $filepath # assign imported CSV data to global $devices array
+#    $global:devices = Import-Csv $filepath # assign imported CSV data to global $devices array
+    $csvData = Import-Csv $filepath
+    ForEach ($item in $csvData) {
+        $global:roomNumbers += $($item.Room)
+        $global:ipAddresses += $($item.IP)
+        $global:deviceModels += $($item.Model)
+    }
 }
 
 function checkVersion {
     # establish ssh connection to each host
-    ForEach ($heading in $devices) {
-        New-SSHSession -ComputerName $heading.IP -Credential $credential
+    ForEach ($ip in $ipAddresses) {
+        New-SSHSession -ComputerName $ip -Credential $credential
     }
     # get firmware version
     ForEach ($heading in $SshSessions) {
         Invoke-SSHCommand -Index $heading.SessionId -Command "version"
     }
-    # Add code to disconnect ssh session from each host
+    # disconnect from each connected host
     $sessionIndices = @()
     ForEach ($heading in $SshSessions) {
         $sessionIndices += $heading.SessionId
@@ -31,15 +37,21 @@ function checkVersion {
 }
 
 function uploadFirmware {
-# connect to each device and upload current firmware
+    # connect to each device and upload current firmware
+    # establish SFTP connection to each host
+    ForEach ($ip in $ipAddresses) {
+        New-SFTPSession -ComputerName $ip -Credential $credential
+    }
 }
 
 function applyFirmware {
 # connect to each device and apply current firmware upgrade
 }
 
-Clear-Host
-$devices = @() # instantiate an empty array
+$roomNumbers = @()
+$ipAddresses = @()
+$deviceModels = @()
 importCSV
 $credential = Get-Credential -Message "Enter the username and password to use for SSH to Crestron devices."
 checkVersion
+#uploadFirmware
