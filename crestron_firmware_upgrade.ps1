@@ -8,7 +8,6 @@
 
 function importCSV {
     $filepath = "$PSScriptRoot\ip-addresses-template.csv"
-#    $global:devices = Import-Csv $filepath # assign imported CSV data to global $devices array
     $csvData = Import-Csv $filepath
     ForEach ($item in $csvData) {
         $global:roomNumbers += $($item.Room)
@@ -24,7 +23,7 @@ function checkVersion {
     }
     # get firmware version
     ForEach ($heading in $SshSessions) {
-        Invoke-SSHCommand -Index $heading.SessionId -Command "version"
+        $firmwareVersions += $(Invoke-SSHCommand -Index $heading.SessionId -Command "version").Output
     }
     # disconnect from each connected host
     $sessionIndices = @()
@@ -34,6 +33,7 @@ function checkVersion {
     ForEach ($index in $sessionIndices) {
         Remove-SSHSession -Index $index
     }
+    Write-Output $firmwareVersions
 }
 
 function uploadFirmware {
@@ -48,9 +48,12 @@ function applyFirmware {
 # connect to each device and apply current firmware upgrade
 }
 
+# instantiate global arrays
 $roomNumbers = @()
 $ipAddresses = @()
 $deviceModels = @()
+$firmwareVersions = @()
+
 importCSV
 $credential = Get-Credential -Message "Enter the username and password to use for SSH to Crestron devices."
 checkVersion
