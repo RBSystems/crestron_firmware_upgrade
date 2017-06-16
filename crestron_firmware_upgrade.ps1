@@ -19,11 +19,13 @@ function importCSV {
 function checkVersion {
     # establish ssh connection to each host
     ForEach ($ip in $ipAddresses) {
-        New-SSHSession -ComputerName $ip -Credential $credential # | Out-Null
+        New-SSHSession -ComputerName $ip -Credential $credential | Out-Null
     }
     # get firmware version
     ForEach ($heading in $SshSessions) {
-        $firmwareVersions += $(Invoke-SSHCommand -Index $heading.SessionId -Command "version").Output
+        $f = Invoke-SSHCommand -Index $heading.SessionId -Command "version"
+        $f.Output = $f.Output.GetValue(0).trim()
+        $global:firmwareVersions += $f
     }
     # disconnect from each connected host
     $sessionIndices = @()
@@ -31,9 +33,8 @@ function checkVersion {
         $sessionIndices += $heading.SessionId
     }
     ForEach ($index in $sessionIndices) {
-        Remove-SSHSession -Index $index # | Out-Null
+        Remove-SSHSession -Index $index | Out-Null
     }
-    Write-Output $firmwareVersions
 }
 
 function uploadFirmware {
@@ -56,5 +57,7 @@ $firmwareVersions = @()
 
 importCSV
 $credential = (Get-Credential crestron -Message "Enter the username and password to use for SSH to Crestron devices.")
+$filePath = "$PSScriptRoot\firmware-versions.csv"
 checkVersion
+$firmwareVersions | Select-Object -Property Output,Host | Export-Csv -Path $filePath -NoTypeInformation
 #uploadFirmware
