@@ -7,8 +7,8 @@
 # successfully.
 
 function importCSV {
-    $filepath = "$PSScriptRoot\ip-addresses-template.csv"
-    $csvData = Import-Csv $filepath
+    $filePath = "$PSScriptRoot\ip-addresses-template.csv"
+    $csvData = Import-Csv $filePath
     ForEach ($item in $csvData) {
         $global:roomNumbers += $($item.Room)
         $global:ipAddresses += $($item.IP)
@@ -19,7 +19,7 @@ function importCSV {
 function checkVersion {
     # establish ssh connection to each host
     ForEach ($ip in $ipAddresses) {
-        New-SSHSession -ComputerName $ip -Credential $credential
+        New-SSHSession -ComputerName $ip -Credential $credential # | Out-Null
     }
     # get firmware version
     ForEach ($heading in $SshSessions) {
@@ -31,7 +31,7 @@ function checkVersion {
         $sessionIndices += $heading.SessionId
     }
     ForEach ($index in $sessionIndices) {
-        Remove-SSHSession -Index $index
+        Remove-SSHSession -Index $index # | Out-Null
     }
     Write-Output $firmwareVersions
 }
@@ -55,6 +55,6 @@ $deviceModels = @()
 $firmwareVersions = @()
 
 importCSV
-$credential = Get-Credential -Message "Enter the username and password to use for SSH to Crestron devices."
+$credential = (Get-Credential crestron -Message "Enter the username and password to use for SSH to Crestron devices.")
 checkVersion
 #uploadFirmware
